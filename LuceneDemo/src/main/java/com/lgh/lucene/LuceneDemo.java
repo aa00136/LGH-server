@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
@@ -41,18 +41,24 @@ public class LuceneDemo {
 		this.indexWriter = new IndexWriter(index, config);
 	}
 
-	private static void addDoc(IndexWriter w, String title, String fileName) throws IOException {
+	private static void addDoc(IndexWriter w, Map<String,String>paramMap) throws IOException {
 		Document doc = new Document();
-		doc.add(new StringField("fileName", fileName, Field.Store.YES));
-		doc.add(new TextField("body", title, Field.Store.YES));
+		Set<String>fieldSet=paramMap.keySet();
+		for(String field:fieldSet)
+			doc.add(new TextField(field, paramMap.get(field), Field.Store.YES));
+		
 		w.addDocument(doc);
 	}
 
 	public boolean createIndex(String path) {
 		try {
 			List<File> fileList = FileUtils.getDocxFiles(path);
+			Map<String,String>paramMap=new HashMap<String, String>();
 			for (File file : fileList) {
-				addDoc(indexWriter, FileUtils.docToString(file), file.getName());
+				paramMap.put("fileName", file.getName());
+				paramMap.put("body", FileUtils.docToString(file));
+				addDoc(indexWriter, paramMap);
+				paramMap.clear();
 			}
 			indexWriter.close();
 		} catch (IOException e) {
@@ -72,11 +78,11 @@ public class LuceneDemo {
 		searcher.search(query, collector);
 		ScoreDoc[] hits = collector.topDocs().scoreDocs;
 
-		System.out.println("Found " + hits.length + " hits.");
+		//System.out.println("lucene Found " + hits.length + " hits.");
 		for (int i = 0; i < hits.length; ++i) {
 			int docId = hits[i].doc;
 			Document d = searcher.doc(docId);
-			System.out.println((i + 1) + ". " + d.get("fileName") + "\t" + d.get("body"));
+			//System.out.println((i + 1) + ". " + d.get("fileName") + "\t" + d.get("body"));
 			resultMap.put(d.get("fileName"), d.get("body"));
 		}
 		reader.close();

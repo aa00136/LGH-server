@@ -17,8 +17,10 @@ public class RedisDemo {
         nodes.add(new HostAndPort("10.21.32.113", 7006));
         JedisCluster cluster = new JedisCluster(nodes);
         //cluster.set("test2", "hello_world2");
-        String str = cluster.get("test");
-        System.out.println("---:"+str);
+        //for(int i=0;i<1000;i++){
+        	//cluster.lpush("i", "i"+i);
+        //}
+        System.out.println("---:"+cluster.llen("i"));
         //关闭连接
         try {
 			cluster.close();
